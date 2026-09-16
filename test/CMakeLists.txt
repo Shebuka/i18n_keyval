@@ -131,7 +131,7 @@ SET(
     I18N_KEYVAL_TEST_SOURCES
     core/api.cpp
     core/registry.cpp
-    util/split_iterator.cpp
+    util/split.cpp
     util/file.cpp
     translators/basic.cpp
     translators/nlohmann_json.cpp

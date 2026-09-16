@@ -6,7 +6,7 @@
 #include "i18n_keyval/util/extension.hpp"
 #include "i18n_keyval/util/file.hpp"
 #include "i18n_keyval/util/locale.hpp"
-#include "i18n_keyval/util/split_iterator.hpp"
+#include "i18n_keyval/util/split.hpp"
 
 namespace i18n::translators
 {
@@ -70,23 +70,20 @@ class nlohmann_json
   {
     std::string_view view{composed_key_, length_};
     auto* current_object = &_object;
-    i18n::util::split_iterator it{view};
 
-    for (; !(*it).empty(); ++it)
+    for (std::string_view key : i18n::util::split(view, '.'))
     {
-      const std::string_view key = *it;
-
-      if (current_object->contains(key))
-      {
-        current_object = &((*current_object)[key]);
-      }
-      else
+      // An empty segment (leading/trailing/duplicated '.') makes the key
+      // malformed; treat it as not found rather than looking it up.
+      if (key.empty() || !current_object->contains(key))
       {
         return std::string{view};
       }
+
+      current_object = &((*current_object)[key]);
     }
 
-    if (it.malformed() || current_object->is_null() || !current_object->is_string())
+    if (current_object->is_null() || !current_object->is_string())
     {
       return std::string{view};
     }

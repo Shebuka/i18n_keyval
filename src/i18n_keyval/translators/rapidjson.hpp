@@ -5,7 +5,7 @@
 #include "i18n_keyval/util/extension.hpp"
 #include "i18n_keyval/util/file.hpp"
 #include "i18n_keyval/util/locale.hpp"
-#include "i18n_keyval/util/split_iterator.hpp"
+#include "i18n_keyval/util/split.hpp"
 #include "rapidjson/document.h"
 
 namespace i18n::translators
@@ -90,11 +90,17 @@ class rapidjson
 
     auto member_iterator = _document.MemberEnd();
     bool first_time = true;
-    i18n::util::split_iterator it{view};
 
-    for (; !(*it).empty(); ++it)
+    for (std::string_view segment : i18n::util::split(view, '.'))
     {
-      const auto key_str = std::string(*it);
+      // An empty segment (leading/trailing/duplicated '.') makes the key
+      // malformed; treat it as not found rather than looking it up.
+      if (segment.empty())
+      {
+        return std::string{view};
+      }
+
+      const auto key_str = std::string(segment);
       const auto& key = key_str.c_str();
 
       if (first_time)
@@ -124,7 +130,7 @@ class rapidjson
       }
     }
 
-    if (it.malformed() || member_iterator == _document.MemberEnd() || member_iterator->value.IsNull() ||
+    if (member_iterator == _document.MemberEnd() || member_iterator->value.IsNull() ||
         !member_iterator->value.IsString())
     {
       return std::string{view};

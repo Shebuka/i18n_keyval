@@ -17,7 +17,7 @@ SET(
 add_library(i18n_keyval ${I18N_KEYVAL_SOURCES})
 add_library(i18n_keyval::i18n_keyval ALIAS i18n_keyval)
 
-target_compile_features(i18n_keyval PUBLIC cxx_std_17)
+target_compile_features(i18n_keyval PUBLIC cxx_std_20)
 
 if (MSVC)
     target_compile_options(i18n_keyval PUBLIC /W4)

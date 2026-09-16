@@ -6,7 +6,7 @@
 #include "i18n_keyval/util/extension.hpp"
 #include "i18n_keyval/util/file.hpp"
 #include "i18n_keyval/util/locale.hpp"
-#include "i18n_keyval/util/split_iterator.hpp"
+#include "i18n_keyval/util/split.hpp"
 
 namespace i18n::translators
 {
@@ -95,7 +95,6 @@ class sol2
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};
-    i18n::util::split_iterator it{view};
     auto current_object = _lua.get<sol::table>("translations");
 
     if (!current_object.valid())
@@ -103,23 +102,31 @@ class sol2
       return std::string{view};
     }
 
-    for (; !(*it).empty(); ++it)
+    // Holds the string found at a leaf, if any, instead of returning as
+    // soon as one is found: a key like "a.b." (trailing '.') or "a.b.c"
+    // where "b" is itself a string would otherwise let a segment past the
+    // real leaf be silently ignored. `leaf` becomes valid only at the
+    // last segment of a well-formed key, and any segment encountered
+    // after that (or an empty one, from a malformed key) invalidates the
+    // whole lookup.
+    sol::object leaf;
+
+    for (std::string_view key : i18n::util::split(view, '.'))
     {
-      const std::string_view key = *it;
+      if (key.empty() || leaf.valid())
+      {
+        return std::string{view};
+      }
+
       const auto& value = current_object.get<sol::object>(key);
 
       if (value.valid() && value.is<sol::table>())
       {
-        current_object = current_object.get<sol::table>(key);
+        current_object = value.as<sol::table>();
       }
       else if (value.valid() && value.is<std::string>())
       {
-        if (it.malformed())
-        {
-          return std::string{view};
-        }
-
-        return value.as<std::string>();
+        leaf = value;
       }
       else
       {
@@ -127,7 +134,12 @@ class sol2
       }
     }
 
-    return std::string{view};
+    if (!leaf.valid())
+    {
+      return std::string{view};
+    }
+
+    return leaf.as<std::string>();
   }
 
  private:
