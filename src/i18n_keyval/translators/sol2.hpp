@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <sol/sol.hpp>
 
-#include "i18n_keyval/core/common.hpp"
 #include "i18n_keyval/util/extension.hpp"
 #include "i18n_keyval/util/file.hpp"
 #include "i18n_keyval/util/split_iterator.hpp"
@@ -19,16 +18,16 @@ class sol2
   {
     if (locale_.empty())
     {
-      throw_i18n_exception("Locale is empty");
       _lua["translations"] = sol::lua_nil;
       return;
     }
 
     const std::filesystem::path locale_directory = _directory_path / locale_;
 
+    // An unsupported locale is not an error: fall back to echoing the key
+    // untranslated, same as an empty/unset locale.
     if (!std::filesystem::exists(locale_directory) || !std::filesystem::is_directory(locale_directory))
     {
-      throw_i18n_exception("Locale not found");
       _lua["translations"] = sol::lua_nil;
       return;
     }

@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <pugixml.hpp>
 
-#include "i18n_keyval/core/common.hpp"
 #include "i18n_keyval/util/extension.hpp"
 
 namespace i18n::translators
@@ -19,16 +18,16 @@ class pugixml
   {
     if (locale_.empty())
     {
-      throw_i18n_exception("Locale not found");
       _document.load_file("");
       return;
     }
 
     const std::filesystem::path full_path = _directory_path / locale_ / (default_file_name + util::extension::xml);
 
+    // An unsupported locale is not an error: fall back to echoing the key
+    // untranslated, same as an empty/unset locale.
     if (!std::filesystem::exists(full_path))
     {
-      throw_i18n_exception("Locale not found");
       _document.load_file("");
       return;
     }

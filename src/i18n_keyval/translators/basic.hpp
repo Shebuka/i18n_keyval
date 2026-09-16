@@ -3,8 +3,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "i18n_keyval/core/common.hpp"
-
 namespace i18n
 {
 using translation_table = std::unordered_map<std::string, std::string>;
@@ -20,9 +18,11 @@ class basic
 
   void set_locale(const std::string& locale_)
   {
+    // A locale with no matching table (including an empty/unset locale) is
+    // not an error: translate() falls back to echoing the key untranslated.
     if (_translations.find(locale_) == _translations.end())
     {
-      throw_i18n_exception("Locale not found");
+      _values = nullptr;
       return;
     }
 

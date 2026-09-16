@@ -4,7 +4,6 @@
 
 #include <filesystem>
 
-#include "i18n_keyval/core/common.hpp"
 #include "i18n_keyval/i18n.hpp"
 #include "i18n_keyval/util/extension.hpp"
 #include "i18n_keyval/util/split_iterator.hpp"
@@ -28,18 +27,20 @@ class tinyxml2
   {
     if (locale_.empty())
     {
-      throw_i18n_exception("Locale is empty");
+      _document.Clear();
       return;
     }
 
     const std::filesystem::path full_path = _directory_path / locale_ / (default_file_name + util::extension::xml);
     const auto& path_str = full_path.string();
 
+    // A missing or unparseable locale file is not an error: fall back to
+    // echoing the key untranslated, same as an empty/unset locale.
     auto res = _document.LoadFile(path_str.c_str());
 
     if (res != ::tinyxml2::XML_SUCCESS)
     {
-      throw_i18n_exception("Locale not found");
+      _document.Clear();
       return;
     }
   }

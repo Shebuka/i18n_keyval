@@ -18,14 +18,16 @@ std::string registry::translate(const char* composed_key_, const std::size_t len
   return _translator->translate(composed_key_, length_);
 }
 
-void registry::set_locale(std::string locale_) noexcept
+void registry::set_locale(std::string locale_)
 {
-  locale = std::move(locale_);
-
   if (_translator != nullptr)
   {
-    _translator->set_locale(locale);
+    // Update the translator first: if it throws, `locale` is left
+    // unmodified instead of pointing at a locale that was never loaded.
+    _translator->set_locale(locale_);
   }
+
+  locale = std::move(locale_);
 }
 
 registry& registry::instance() noexcept
