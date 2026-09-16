@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include "i18n_keyval/core/translator.hpp"
@@ -11,7 +10,7 @@ namespace i18n
 class registry
 {
  public:
-  registry() = default;
+  registry();
   registry(const registry&) = delete;
   registry& operator=(const registry&) = delete;
 
@@ -22,8 +21,20 @@ class registry
   [[nodiscard]] static registry& instance() noexcept;
 
  private:
-  std::string _locale{};
-  std::shared_ptr<translator> _translator = nullptr;
-  mutable std::mutex _mutex;
+  // Bundles the active locale with the translator instance that was built
+  // for it. Once published, a snapshot is never mutated again -- a new
+  // locale means building an entirely new snapshot (see translator::
+  // with_locale) and swapping the pointer, never editing the one readers
+  // might currently be using. That's what makes it safe to publish with
+  // a single atomic pointer swap (via std::atomic_load/atomic_store)
+  // instead of a lock: translate() always sees either the old snapshot
+  // or the new one in full, never a partially-updated one.
+  struct snapshot
+  {
+    std::string locale;
+    std::shared_ptr<translator> translator_;
+  };
+
+  std::shared_ptr<const snapshot> _snapshot;
 };
 }  // namespace i18n

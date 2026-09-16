@@ -56,6 +56,16 @@ class nlohmann_json
     _object = nlohmann::json::parse(std::move(json_string));
   }
 
+  // Builds a fresh instance instead of copying *this: nlohmann::json is
+  // copyable, but there is no reason to pay for a deep copy of the
+  // *currently* loaded locale's data only to immediately replace it.
+  [[nodiscard]] nlohmann_json with_locale(const std::string& locale_) const
+  {
+    nlohmann_json copy{_directory_path};
+    copy.set_locale(locale_);
+    return copy;
+  }
+
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};

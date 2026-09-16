@@ -51,6 +51,17 @@ class pugixml
     _document.load_file(full_path.c_str());
   }
 
+  // Builds a fresh instance instead of copying *this: pugi::xml_document
+  // deliberately disables copying (it owns its own memory pool), so a
+  // fresh instance loaded from the same _directory_path is the only way
+  // to produce an independent snapshot for this translator.
+  [[nodiscard]] pugixml with_locale(const std::string& locale_) const
+  {
+    pugixml copy{_directory_path};
+    copy.set_locale(locale_);
+    return copy;
+  }
+
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};

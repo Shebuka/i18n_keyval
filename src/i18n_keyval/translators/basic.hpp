@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -14,19 +15,28 @@ namespace i18n::translators
 class basic
 {
  public:
-  basic(translations translations_) : _translations(std::move(translations_)) {}
+  // The whole translation table (for every locale) is immutable config,
+  // shared behind a pointer rather than owned by value, so with_locale()
+  // below can hand out an independent copy of this object without
+  // copying the underlying map on every locale switch.
+  basic(translations translations_) : _translations(std::make_shared<const translations>(std::move(translations_)))
+  {
+  }
 
   void set_locale(const std::string& locale_)
   {
+    const auto it = _translations->find(locale_);
+
     // A locale with no matching table (including an empty/unset locale) is
     // not an error: translate() falls back to echoing the key untranslated.
-    if (_translations.find(locale_) == _translations.end())
-    {
-      _values = nullptr;
-      return;
-    }
+    _values = (it == _translations->end()) ? nullptr : &it->second;
+  }
 
-    _values = &_translations.at(locale_);
+  [[nodiscard]] basic with_locale(const std::string& locale_) const
+  {
+    basic copy{*this};
+    copy.set_locale(locale_);
+    return copy;
   }
 
   std::string translate(const char* key_, std::size_t length_) const noexcept
@@ -58,7 +68,7 @@ class basic
   }
 
  private:
-  translations _translations;
-  translation_table* _values = nullptr;
+  std::shared_ptr<const translations> _translations;
+  const translation_table* _values = nullptr;
 };
 }  // namespace i18n::translators

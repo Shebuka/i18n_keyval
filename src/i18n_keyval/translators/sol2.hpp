@@ -81,6 +81,17 @@ class sol2
     _lua.script(lua_string);
   }
 
+  // Builds a fresh instance instead of copying *this: sol::state can't be
+  // copied at all (it owns a Lua VM), so a fresh, independent VM loaded
+  // from the same _directory_path is the only way to produce a snapshot
+  // for this translator.
+  [[nodiscard]] sol2 with_locale(const std::string& locale_) const
+  {
+    sol2 copy{_directory_path};
+    copy.set_locale(locale_);
+    return copy;
+  }
+
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};

@@ -60,6 +60,17 @@ class rapidjson
     _document.Parse(json_string.c_str(), json_string.size());
   }
 
+  // Builds a fresh instance instead of copying *this: rapidjson::Document
+  // deliberately disables copying (it owns its own memory pool), so a
+  // fresh instance loaded from the same _directory_path is the only way
+  // to produce an independent snapshot for this translator.
+  [[nodiscard]] rapidjson with_locale(const std::string& locale_) const
+  {
+    rapidjson copy{_directory_path};
+    copy.set_locale(locale_);
+    return copy;
+  }
+
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};

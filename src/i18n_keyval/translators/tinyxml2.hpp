@@ -60,6 +60,16 @@ class tinyxml2
     }
   }
 
+  // Builds a fresh instance instead of using the DeepCopy-based copy
+  // constructor above: that constructor still duplicates the *currently*
+  // loaded locale's data, which set_locale() is about to discard anyway.
+  [[nodiscard]] tinyxml2 with_locale(const std::string& locale_) const
+  {
+    tinyxml2 copy{_directory_path};
+    copy.set_locale(locale_);
+    return copy;
+  }
+
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};
