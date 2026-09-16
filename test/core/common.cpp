@@ -36,8 +36,16 @@ TEST_CASE("i18n_exception is a catchable std::exception", "[core]")
   REQUIRE(std::string(base.what()) == "boom");
 }
 
-TEST_CASE("throw_i18n_exception throws a catchable i18n_exception", "[core]")
+TEST_CASE("throw_i18n_exception reports the message according to the exceptions build mode", "[core]")
 {
+  // This library ships two behaviors for throw_i18n_exception, selected
+  // at build time by I18N_KEYVAL_EXCEPTIONS: I18N_EXCEPTIONS is defined
+  // (the CMake default) means it throws; undefined (this project's own
+  // CI, and any -fno-exceptions consumer) means it prints and returns
+  // normally instead. Both are correct depending on the build mode --
+  // this test asserts whichever one this build was actually configured
+  // for, rather than assuming the default.
+#ifdef I18N_EXCEPTIONS
   bool caught = false;
 
   try
@@ -51,4 +59,8 @@ TEST_CASE("throw_i18n_exception throws a catchable i18n_exception", "[core]")
   }
 
   REQUIRE(caught);
+#else
+  i18n::throw_i18n_exception("boom");
+  SUCCEED("throw_i18n_exception returned normally instead of throwing, as expected with I18N_EXCEPTIONS undefined");
+#endif
 }

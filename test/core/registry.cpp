@@ -37,6 +37,15 @@ TEST_CASE("registry withstands concurrent set_locale/translate/get_locale", "[co
 
   i18n::initialize_translator(translations);
 
+  // initialize_translator() applies whatever locale the global registry
+  // singleton already had -- which, since Catch2 runs every test case in
+  // this same process with randomized ordering, could be anything a
+  // preceding test left behind (e.g. "", "fr", ...). Pin it to a known
+  // value before starting the threads below, so the reader threads can't
+  // observe that leftover state and flag it as unexpected before the
+  // writer threads below have run even once.
+  i18n::set_locale("en");
+
   std::atomic<bool> stop{false};
   std::atomic<int> unexpected{0};
   std::vector<std::thread> threads;

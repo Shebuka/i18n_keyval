@@ -19,18 +19,37 @@ add_library(i18n_keyval::i18n_keyval ALIAS i18n_keyval)
 
 target_compile_features(i18n_keyval PUBLIC cxx_std_20)
 
+# PRIVATE: these are this library's own build settings (warning level,
+# optimization level, and -- in the no-exceptions build mode --
+# -fno-exceptions), not part of its interface. A consumer's own targets
+# have their own opinions about warnings and optimization, and forcing
+# -fno-exceptions PUBLIC would disable exception support in the
+# *consumer's* code too, for every target that merely links this
+# library, regardless of whether that consumer's own code uses
+# exceptions at all. Nothing in this library's public headers requires
+# the consumer to match these settings: I18N_KEYVAL_EXCEPTIONS only
+# changes whether throw_i18n_exception() (compiled into this library)
+# throws or prints, and the bundled translators already avoid throwing
+# across the library/consumer boundary in ways that would require the
+# consumer to be compiled the same way (see e.g. the nlohmann_json
+# translator's non-throwing parse()).
 if (MSVC)
-    target_compile_options(i18n_keyval PUBLIC /W4)
+    target_compile_options(i18n_keyval PRIVATE /W4)
 else()
-    target_compile_options(i18n_keyval PUBLIC -Wall -Wextra -O3)
+    target_compile_options(i18n_keyval PRIVATE -Wall -Wextra -O3)
 endif()
 
 if (I18N_KEYVAL_EXCEPTIONS)
+    # PUBLIC: I18N_TRY/I18N_CATCH/I18N_THROW in core/common.hpp are
+    # part of the public API (a custom translator could use them), and
+    # their expansion depends on whether I18N_EXCEPTIONS is defined at
+    # the *consumer's* include site, not just inside this library's own
+    # compiled sources.
     target_compile_definitions(i18n_keyval PUBLIC I18N_EXCEPTIONS)
 endif()
 
 if (NOT I18N_KEYVAL_EXCEPTIONS)
-    target_compile_options(i18n_keyval PUBLIC -fno-exceptions)
+    target_compile_options(i18n_keyval PRIVATE -fno-exceptions)
 endif()
 
 target_include_directories(i18n_keyval PUBLIC "src")
