@@ -46,8 +46,9 @@ class nlohmann_json
   {
     std::string_view view{composed_key_, length_};
     auto* current_object = &_object;
+    i18n::util::split_iterator it{view};
 
-    for (i18n::util::split_iterator it{view}; !(*it).empty(); ++it)
+    for (; !(*it).empty(); ++it)
     {
       const std::string_view key = *it;
 
@@ -61,7 +62,7 @@ class nlohmann_json
       }
     }
 
-    if (current_object->is_null() || !current_object->is_string())
+    if (it.malformed() || current_object->is_null() || !current_object->is_string())
     {
       return std::string{view};
     }

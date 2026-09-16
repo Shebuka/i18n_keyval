@@ -47,8 +47,9 @@ class rapidjson
     std::string_view view{composed_key_, length_};
     auto member_iterator = _document.MemberEnd();
     bool first_time = true;
+    i18n::util::split_iterator it{view};
 
-    for (i18n::util::split_iterator it{view}; !(*it).empty(); ++it)
+    for (; !(*it).empty(); ++it)
     {
       const auto key_str = std::string(*it);
       const auto& key = key_str.c_str();
@@ -74,7 +75,7 @@ class rapidjson
       }
     }
 
-    if (member_iterator == _document.MemberEnd() || member_iterator->value.IsNull() ||
+    if (it.malformed() || member_iterator == _document.MemberEnd() || member_iterator->value.IsNull() ||
         !member_iterator->value.IsString())
     {
       return std::string{view};

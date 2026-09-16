@@ -61,6 +61,11 @@ class sol2
       }
       else if (value.valid() && value.is<std::string>())
       {
+        if (it.malformed())
+        {
+          return std::string{view};
+        }
+
         return value.as<std::string>();
       }
       else

@@ -39,7 +39,6 @@ class tinyxml2
 
     if (res != ::tinyxml2::XML_SUCCESS)
     {
-      // printf("Failed to load file %s\n", _document.ErrorStr());
       throw_i18n_exception("Locale not found");
       return;
     }
@@ -89,7 +88,7 @@ class tinyxml2
       }
     }
 
-    if (current_element == nullptr)
+    if (current_element == nullptr || it.malformed())
     {
       return std::string{view};
     }
