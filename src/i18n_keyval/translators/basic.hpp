@@ -40,12 +40,21 @@ class basic
 
     const auto& values = *_values;
 
-    if (values.find(key_) == values.end())
+    // unordered_map::find/at(const char*) implicitly build a std::string
+    // via strlen(key_), ignoring length_ entirely. The API contract here
+    // is (pointer, length) precisely because the caller (e.g. t() on a
+    // std::string_view) may pass a buffer that isn't NUL-terminated right
+    // at length_ -- strlen would then read past the end of it. Building
+    // the key explicitly from the (pointer, length) pair respects the
+    // bound the caller actually gave us.
+    const auto it = values.find(std::string{view});
+
+    if (it == values.end())
     {
       return std::string{view};
     }
 
-    return values.at(key_);
+    return it->second;
   }
 
  private:
