@@ -42,14 +42,26 @@ class pugixml
       return std::string{composed_key_, length_};
     }
 
-    auto nodes = _document.select_nodes(composed_key_);
+    // The key is evaluated as an XPath expression, and an arbitrary or
+    // malformed one (as little as a single stray character) makes
+    // select_nodes throw pugi::xpath_exception. This function is noexcept,
+    // so letting that escape would call std::terminate over a single bad
+    // key; treat it the same as "not found" instead.
+    try
+    {
+      auto nodes = _document.select_nodes(composed_key_);
 
-    if (nodes.empty())
+      if (nodes.empty())
+      {
+        return std::string{composed_key_, length_};
+      }
+
+      return nodes[0].node().first_child().value();
+    }
+    catch (const pugi::xpath_exception&)
     {
       return std::string{composed_key_, length_};
     }
-
-    return nodes[0].node().first_child().value();
   }
 
  private:
