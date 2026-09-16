@@ -46,6 +46,6 @@ void set_locale(std::string locale_)
 
 std::string locale() noexcept
 {
-  return registry::instance().locale;
+  return registry::instance().get_locale();
 }
 }  // namespace i18n

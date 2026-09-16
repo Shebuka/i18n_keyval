@@ -4,12 +4,12 @@
 TEST_CASE("registry", "[core]")
 {
   i18n::registry::instance().set_locale("");
-  auto locale = i18n::registry::instance().locale;
+  auto locale = i18n::registry::instance().get_locale();
 
   REQUIRE(locale == "");
 
   i18n::registry::instance().set_locale("es");
-  locale = i18n::registry::instance().locale;
+  locale = i18n::registry::instance().get_locale();
 
   REQUIRE(locale == "es");
 }
