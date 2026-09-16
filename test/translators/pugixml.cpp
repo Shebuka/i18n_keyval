@@ -166,6 +166,62 @@ TEST_CASE("translator::pugixml (custom directory)", "[translators]")
   REQUIRE("moon"_t == "Moon");
 }
 
+TEST_CASE("translator::pugixml does not crash on malformed keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F2: the key used to be evaluated as an XPath
+  // expression via select_nodes(), and a syntactically invalid one (as
+  // little as a single stray character) made the parser throw
+  // pugi::xpath_exception inside a noexcept function, aborting the
+  // process.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::pugixml>();
+
+  REQUIRE("["_t == "[");
+}
+
+TEST_CASE("translator::pugixml does not evaluate keys as XPath expressions", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F5: a key used to be handed straight to
+  // select_nodes(), so a key influenced by untrusted data could select
+  // or exfiltrate nodes outside the intended path instead of being
+  // treated as "not found".
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::pugixml>();
+
+  REQUIRE("//moon"_t == "//moon");
+  REQUIRE("//*[1]"_t == "//*[1]");
+}
+
+TEST_CASE("translator::pugixml rejects malformed keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F13 (see the equivalent nlohmann_json test for
+  // details), using '/' as the delimiter for this translator.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::pugixml>();
+
+  REQUIRE("colors/"_t == "colors/");
+  REQUIRE("/colors"_t == "/colors");
+  REQUIRE("colors//black"_t == "colors//black");
+}
+
+TEST_CASE("translator::pugixml rejects path traversal in the locale", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F4 (see the equivalent nlohmann_json test for
+  // details).
+  i18n::initialize_translator<i18n::translators::pugixml>("data/translations");
+  i18n::set_locale("../outside_translations");
+
+  REQUIRE("secret"_t == "secret");
+}
+
 TEST_CASE("translator::pugixml (plurals)", "[translators]")
 {
   using namespace i18n::literals;

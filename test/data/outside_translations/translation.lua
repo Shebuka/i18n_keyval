@@ -1,0 +1,3 @@
+translations = {
+  ["secret"] = "LEAKED_DATA_OUTSIDE_TRANSLATIONS_DIR"
+}

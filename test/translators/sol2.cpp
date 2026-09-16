@@ -166,6 +166,62 @@ TEST_CASE("translator::sol2 (custom directory)", "[translators]")
   REQUIRE("moon"_t == "Moon");
 }
 
+TEST_CASE("translator::sol2 aborts a runaway translation script", "[translators]")
+{
+  // Regression test for F9: a translation.lua file is executed as code
+  // with no bound on how long it can run. Before the instruction-count
+  // hook was added, `while true do end` hung the process forever;
+  // verified during development to now abort in well under a second
+  // instead.
+  i18n::initialize_translator<i18n::translators::sol2>();
+
+  REQUIRE_THROWS_AS(i18n::set_locale("malicious"), std::exception);
+}
+
+TEST_CASE("translator::sol2 requires the last segment to resolve the key", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Consistency fix made alongside the ranges-based rewrite of the key
+  // splitter: this translator used to return as soon as it found a
+  // string value inside the requested table, without checking whether
+  // more of the key remained -- so "moon.cat" incorrectly returned
+  // "moon"'s value, ignoring the trailing ".cat" entirely. Every other
+  // translator already requires the *last* segment specifically to
+  // resolve to a string; this test locks in that this one now does too.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::sol2>();
+
+  REQUIRE("moon.cat"_t == "moon.cat");
+}
+
+TEST_CASE("translator::sol2 rejects malformed keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F13 (see the equivalent nlohmann_json test for
+  // details).
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::sol2>();
+
+  REQUIRE("moon."_t == "moon.");
+  REQUIRE(".moon"_t == ".moon");
+  REQUIRE("colors..black"_t == "colors..black");
+}
+
+TEST_CASE("translator::sol2 rejects path traversal in the locale", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F4: with sol2, a locale escaping the configured
+  // translations directory doesn't just leak data -- the escaped-to file
+  // is executed as Lua, so this is the highest-severity variant of F4.
+  i18n::initialize_translator<i18n::translators::sol2>("data/translations");
+  i18n::set_locale("../outside_translations");
+
+  REQUIRE("secret"_t == "secret");
+}
+
 TEST_CASE("translator::sol2 (plurals)", "[translators]")
 {
   using namespace i18n::literals;

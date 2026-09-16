@@ -166,6 +166,49 @@ TEST_CASE("translator::rapidjson (custom directory)", "[translators]")
   REQUIRE("moon"_t == "Moon");
 }
 
+TEST_CASE("translator::rapidjson does not crash on type confusion", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F6: "moon" is a plain string in the fixture, not
+  // an object. Descending into it with FindMember() read the wrong union
+  // member: rapidjson's own guard (RAPIDJSON_ASSERT) is a plain assert(),
+  // compiled out under NDEBUG -- i.e. every Release build this project's
+  // own CMake produces -- so this segfaulted with no diagnostic at all
+  // before the fix.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::rapidjson>();
+
+  REQUIRE("moon.cat"_t == "moon.cat");
+}
+
+TEST_CASE("translator::rapidjson rejects malformed keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F13 (see the equivalent nlohmann_json test for
+  // details): a malformed key must fall back to the untranslated key
+  // rather than matching a partial branch.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::rapidjson>();
+
+  REQUIRE("moon."_t == "moon.");
+  REQUIRE(".moon"_t == ".moon");
+  REQUIRE("colors..black"_t == "colors..black");
+}
+
+TEST_CASE("translator::rapidjson rejects path traversal in the locale", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F4 (see the equivalent nlohmann_json test for
+  // details).
+  i18n::initialize_translator<i18n::translators::rapidjson>("data/translations");
+  i18n::set_locale("../outside_translations");
+
+  REQUIRE("secret"_t == "secret");
+}
+
 TEST_CASE("translator::rapidjson (plurals)", "[translators]")
 {
   using namespace i18n::literals;

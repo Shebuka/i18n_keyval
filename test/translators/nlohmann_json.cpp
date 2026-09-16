@@ -166,6 +166,39 @@ TEST_CASE("translator::nlohmann_json (custom directory)", "[translators]")
   REQUIRE("moon"_t == "Moon");
 }
 
+TEST_CASE("translator::nlohmann_json rejects malformed keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F13: a leading, trailing, or duplicated '.'
+  // used to make the splitter stop early and return whatever partial
+  // branch it had reached instead of treating the key as invalid --
+  // e.g. "colors.black." (a string) could have matched the "colors"
+  // branch's contents through the empty trailing segment.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::nlohmann_json>();
+
+  REQUIRE("moon."_t == "moon.");
+  REQUIRE(".moon"_t == ".moon");
+  REQUIRE("colors..black"_t == "colors..black");
+}
+
+TEST_CASE("translator::nlohmann_json rejects path traversal in the locale", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F4: an unvalidated locale could be used to
+  // escape the configured translations directory via "..", since
+  // std::filesystem::path::operator/ doesn't normalize or reject it.
+  // If this were still possible, the lookup below would return the
+  // leaked content of test/data/outside_translations/translation.json
+  // instead of falling back to the untranslated key.
+  i18n::initialize_translator<i18n::translators::nlohmann_json>("data/translations");
+  i18n::set_locale("../outside_translations");
+
+  REQUIRE("secret"_t == "secret");
+}
+
 TEST_CASE("translator::nlohmann_json (plurals)", "[translators]")
 {
   using namespace i18n::literals;

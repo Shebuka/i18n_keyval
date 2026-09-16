@@ -166,6 +166,49 @@ TEST_CASE("translator::tinyxml2 (custom directory)", "[translators]")
   REQUIRE("moon"_t == "Moon");
 }
 
+TEST_CASE("translator::tinyxml2 does not crash on intermediate-node keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F3: "animals" and "colors" name branches, not
+  // leaves. XMLElement::GetText() returns nullptr, not "", for an
+  // element with no direct text child, and constructing a std::string
+  // from that was undefined behavior (verified to segfault before the
+  // fix). No malformed input is needed, just a key naming a branch
+  // instead of a leaf.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::tinyxml2>();
+
+  REQUIRE("animals"_t == "animals");
+  REQUIRE("colors"_t == "colors");
+}
+
+TEST_CASE("translator::tinyxml2 rejects malformed keys", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F13 (see the equivalent nlohmann_json test for
+  // details), using '/' as the delimiter for this translator.
+  i18n::set_locale("en");
+  i18n::initialize_translator<i18n::translators::tinyxml2>();
+
+  REQUIRE("colors/"_t == "colors/");
+  REQUIRE("/colors"_t == "/colors");
+  REQUIRE("colors//black"_t == "colors//black");
+}
+
+TEST_CASE("translator::tinyxml2 rejects path traversal in the locale", "[translators]")
+{
+  using namespace i18n::literals;
+
+  // Regression test for F4 (see the equivalent nlohmann_json test for
+  // details).
+  i18n::initialize_translator<i18n::translators::tinyxml2>("data/translations");
+  i18n::set_locale("../outside_translations");
+
+  REQUIRE("secret"_t == "secret");
+}
+
 TEST_CASE("translator::tinyxml2 (plurals)", "[translators]")
 {
   using namespace i18n::literals;

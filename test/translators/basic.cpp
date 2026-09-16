@@ -82,3 +82,24 @@ TEST_CASE("translator::basic (plurals)", "[translators]")
   REQUIRE(i18n::t("eating_orange", 3) == "Comiendo 3 naranjas");
   REQUIRE(i18n::t("eating_orange", 9999) == "Comiendo 9999 naranjas");
 }
+
+TEST_CASE("translator::basic respects key length instead of relying on a NUL terminator", "[translators]")
+{
+  // Regression test for F7: translate() used to pass the raw (const
+  // char*, length) pair to unordered_map::find/at(const char*), which
+  // implicitly builds a std::string via strlen(), ignoring length_
+  // entirely. i18n::t(std::string_view) is not required to be
+  // NUL-terminated exactly at its length, so this could read past the
+  // end of the caller's buffer (verified with a guard page during
+  // development: an unterminated "moon" placed at the end of a page
+  // followed by an unmapped one raised SIGBUS).
+  const i18n::translations translations{{"en", {{"moon", "Moon"}}}};
+
+  i18n::set_locale("en");
+  i18n::initialize_translator(translations);
+
+  const char buffer[] = {'m', 'o', 'o', 'n', 'X', 'X', 'X', 'X'};
+  const std::string_view key{buffer, 4};
+
+  REQUIRE(i18n::t(key) == "Moon");
+}

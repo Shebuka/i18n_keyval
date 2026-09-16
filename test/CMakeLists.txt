@@ -129,12 +129,16 @@ message(STATUS "Copying data files")
 file(COPY ${CMAKE_SOURCE_DIR}/test/data/translations DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/test/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+find_package(Threads REQUIRED)
+
 SET(
     I18N_KEYVAL_TEST_SOURCES
     core/api.cpp
+    core/common.cpp
     core/registry.cpp
     util/split.cpp
     util/file.cpp
+    util/locale.cpp
     translators/basic.cpp
     translators/nlohmann_json.cpp
     translators/rapidjson.cpp
@@ -158,6 +162,7 @@ target_link_libraries(
     sol2::sol2
     pugixml::pugixml
     tinyxml2::tinyxml2
+    Threads::Threads
 )
 
 add_test(NAME i18n_keyval_tests COMMAND i18n_keyval_tests)
