@@ -10,10 +10,38 @@
 
 namespace i18n::translators
 {
+namespace detail
+{
+// Translation ".lua" files are executed as code (see set_locale below).
+// sol::state doesn't open any standard library by default, so a
+// translation file can't reach the filesystem or run shell commands
+// unless the embedding application itself has already opened those
+// libraries into the same Lua state -- but nothing otherwise bounds how
+// long a file can run or how much memory it can allocate. This hook
+// aborts execution once a script has run for too many VM instructions,
+// so a translation file (accidentally or maliciously non-terminating,
+// e.g. an infinite loop) can't hang the process indefinitely. It is a
+// CPU bound only: a full sandbox would also need a memory cap and, if
+// the application shares this Lua state with its own scripting, control
+// over what that state exposes -- both of those are the embedding
+// application's responsibility, not something this library can enforce
+// on its own without limiting legitimate use.
+constexpr int lua_instruction_limit = 100'000'000;
+
+inline void enforce_lua_instruction_limit(lua_State* state, lua_Debug*)
+{
+  luaL_error(state, "translation script exceeded the instruction limit");
+}
+}  // namespace detail
+
 class sol2
 {
  public:
-  sol2(std::filesystem::path directory_path_ = default_directory_name) : _directory_path(std::move(directory_path_)) {}
+  sol2(std::filesystem::path directory_path_ = default_directory_name) : _directory_path(std::move(directory_path_))
+  {
+    lua_sethook(_lua.lua_state(), &detail::enforce_lua_instruction_limit, LUA_MASKCOUNT,
+                detail::lua_instruction_limit);
+  }
 
   void set_locale(const std::string& locale_)
   {
