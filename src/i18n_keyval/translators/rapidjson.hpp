@@ -52,8 +52,12 @@ class rapidjson
 
     const std::filesystem::path full_path = locale_directory / (default_file_name + util::extension::json);
 
+    // Parse(str, length) instead of Parse(str.c_str()): read_file() now
+    // preserves embedded NUL bytes (F11), and Parse(const Ch*) would just
+    // reintroduce the same truncation by treating the buffer as a
+    // NUL-terminated C string.
     auto json_string = i18n::util::read_file(full_path);
-    _document.Parse(json_string.c_str());
+    _document.Parse(json_string.c_str(), json_string.size());
   }
 
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
