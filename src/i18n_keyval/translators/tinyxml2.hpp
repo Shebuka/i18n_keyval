@@ -94,7 +94,18 @@ class tinyxml2
       return std::string{view};
     }
 
-    return current_element->GetText();
+    // GetText() returns nullptr, not "", when the element has no direct
+    // text child (e.g. an intermediate node like "animals" in
+    // "animals/felines/cat", or an empty leaf element) -- constructing a
+    // std::string from that would be undefined behavior.
+    const char* text = current_element->GetText();
+
+    if (text == nullptr)
+    {
+      return std::string{view};
+    }
+
+    return text;
   }
 
  private:
