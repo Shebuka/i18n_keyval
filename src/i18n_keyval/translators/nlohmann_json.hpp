@@ -52,8 +52,20 @@ class nlohmann_json
 
     const std::filesystem::path full_path = locale_directory / (default_file_name + util::extension::json);
 
+    // parse(str, cb, allow_exceptions) with allow_exceptions = false
+    // instead of the default throwing parse(str): this isn't just a
+    // simpler way to avoid try/catch, it's required. nlohmann::json
+    // detects I18N_KEYVAL_EXCEPTIONS=OFF's -fno-exceptions at compile
+    // time and falls back to std::abort() instead of throwing --
+    // verified to abort the whole process, uncatchably, on a corrupted
+    // translation.json under that build mode. allow_exceptions = false
+    // sidesteps that entirely by never attempting to throw in the first
+    // place, in either build mode. A corrupted file is then treated the
+    // same as every other "no usable data for this locale" case in this
+    // function: fall back to echoing the key untranslated.
     auto json_string = i18n::util::read_file(full_path);
-    _object = nlohmann::json::parse(std::move(json_string));
+    auto parsed = nlohmann::json::parse(std::move(json_string), nullptr, false);
+    _object = parsed.is_discarded() ? nlohmann::json{} : std::move(parsed);
   }
 
   // Builds a fresh instance instead of copying *this: nlohmann::json is
