@@ -59,6 +59,20 @@ class rapidjson
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
     std::string_view view{composed_key_, length_};
+
+    // FindMember() is only valid to call on an object value; rapidjson
+    // guards this with RAPIDJSON_ASSERT, which is a plain assert() and
+    // therefore compiled out under NDEBUG (i.e. every Release build this
+    // project's own CMake produces). Without this check, a key like
+    // "moon.cat" where "moon" is a string reads member-iterator/length
+    // fields out of a union that actually holds string data -- verified
+    // to segfault in Release, and to trip the assert (not a controlled
+    // failure) otherwise.
+    if (!_document.IsObject())
+    {
+      return std::string{view};
+    }
+
     auto member_iterator = _document.MemberEnd();
     bool first_time = true;
     i18n::util::split_iterator it{view};
@@ -72,6 +86,7 @@ class rapidjson
       {
         member_iterator = _document.FindMember(key);
         first_time = false;
+
         if (member_iterator == _document.MemberEnd())
         {
           return std::string{view};
@@ -79,6 +94,11 @@ class rapidjson
       }
       else
       {
+        if (!member_iterator->value.IsObject())
+        {
+          return std::string{view};
+        }
+
         auto old_member_iterator = member_iterator;
         member_iterator = member_iterator->value.FindMember(key);
 
