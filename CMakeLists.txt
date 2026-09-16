@@ -11,6 +11,7 @@ SET(
     src/i18n_keyval/core/registry.cpp
     src/i18n_keyval/core/common.cpp
     src/i18n_keyval/util/file.cpp
+    src/i18n_keyval/util/locale.cpp
 )
 
 add_library(i18n_keyval ${I18N_KEYVAL_SOURCES})

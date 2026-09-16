@@ -6,6 +6,7 @@
 
 #include "i18n_keyval/i18n.hpp"
 #include "i18n_keyval/util/extension.hpp"
+#include "i18n_keyval/util/locale.hpp"
 #include "i18n_keyval/util/split_iterator.hpp"
 
 namespace i18n::translators
@@ -26,6 +27,20 @@ class tinyxml2
   void set_locale(const std::string& locale_)
   {
     if (locale_.empty())
+    {
+      _document.Clear();
+      return;
+    }
+
+    // Reject anything that isn't a simple identifier before it ever
+    // reaches std::filesystem::path::operator/: an absolute path replaces
+    // the whole directory, and ".." isn't normalized away, so a locale
+    // string could otherwise be used to read a file outside the
+    // translations directory. Treated the same as "locale not found"
+    // (fall back, don't throw): a locale is frequently derived from
+    // untrusted input (user preference, Accept-Language), and an
+    // uncaught exception here would be as much of a DoS as F1's.
+    if (!util::is_valid_locale_name(locale_))
     {
       _document.Clear();
       return;
