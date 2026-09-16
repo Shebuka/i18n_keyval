@@ -5,6 +5,7 @@
 
 #include "i18n_keyval/util/extension.hpp"
 #include "i18n_keyval/util/locale.hpp"
+#include "i18n_keyval/util/split_iterator.hpp"
 
 namespace i18n::translators
 {
@@ -52,31 +53,40 @@ class pugixml
 
   std::string translate(const char* composed_key_, std::size_t length_) const noexcept
   {
+    std::string_view view{composed_key_, length_};
+
     if (length_ == 0)
     {
-      return std::string{composed_key_, length_};
+      return std::string{view};
     }
 
-    // The key is evaluated as an XPath expression, and an arbitrary or
-    // malformed one (as little as a single stray character) makes
-    // select_nodes throw pugi::xpath_exception. This function is noexcept,
-    // so letting that escape would call std::terminate over a single bad
-    // key; treat it the same as "not found" instead.
-    try
-    {
-      auto nodes = _document.select_nodes(composed_key_);
+    // Walk the key one '/'-separated segment at a time as a plain child
+    // element name (mirroring translators::tinyxml2), instead of handing
+    // it to select_nodes as an XPath expression: a key is only ever
+    // supposed to be a path like "colors/black", but XPath accepts any
+    // expression, which previously let a key select or exfiltrate nodes
+    // outside the intended path (e.g. "//*[1]") and, incidentally, made
+    // the parser throw on malformed input (F2).
+    pugi::xml_node current_node = _document;
+    i18n::util::split_iterator<'/'> it{view};
 
-      if (nodes.empty())
+    for (; !(*it).empty(); ++it)
+    {
+      const std::string key{*it};
+      current_node = current_node.child(key.c_str());
+
+      if (!current_node)
       {
-        return std::string{composed_key_, length_};
+        return std::string{view};
       }
+    }
 
-      return nodes[0].node().first_child().value();
-    }
-    catch (const pugi::xpath_exception&)
+    if (it.malformed())
     {
-      return std::string{composed_key_, length_};
+      return std::string{view};
     }
+
+    return current_node.child_value();
   }
 
  private:
