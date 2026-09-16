@@ -10,7 +10,7 @@ message(STATUS "Downloading catch2")
 FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG 05e10dfccc28c7f973727c54f850237d07d5e10f # v3.5.2
+    GIT_TAG 317ac1ed4c0bb6e6b91eafc817e05c488feffcb3 # v3.16.0
 )
 FetchContent_MakeAvailable(Catch2)
 
@@ -18,7 +18,7 @@ message(STATUS "Downloading nlohmann/json")
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG 9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03 # v3.11.3
+    GIT_TAG 55f93686c01528224f448c19128836e7df245f72 # v3.12.0
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
@@ -32,7 +32,7 @@ set(RAPIDJSON_BUILD_CXX17 ON CACHE BOOL "" FORCE)
 FetchContent_Declare(
     RapidJSON
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-    GIT_TAG 6089180ecb704cb2b136777798fa1be303618975
+    GIT_TAG 24b5e7a8b27f42fa16b96fc70aade9106cf7102f # HEAD as of 2025-02-05; no tagged release since v1.1.0 (2016)
 )
 FetchContent_MakeAvailable(RapidJSON)
 set(RAPIDJSON_INCLUDE_DIRS ${RapidJSON_SOURCE_DIR}/include)
@@ -44,7 +44,7 @@ PROJECT(lua
 FetchContent_Declare(
     Lua
     GIT_REPOSITORY https://github.com/lua/lua.git
-    GIT_TAG 6443185167c77adcc8552a3fee7edab7895db1a9 # v5.4.6
+    GIT_TAG 312b9efaa1061c2c4cad08554dbc1351c3270eef # v5.4.9
 )
 FetchContent_MakeAvailable(Lua)
 set(Lua_SOURCE_DIR ${CMAKE_SOURCE_DIR}/build/_deps/lua-src)
@@ -103,7 +103,9 @@ set(SOL2_BUILD_LUA FALSE CACHE BOOL "Always build Lua, do not search for it in t
 FetchContent_Declare(
     sol2
     GIT_REPOSITORY https://github.com/ThePhD/sol2.git
-    GIT_TAG dca62a0f02bb45f3de296de3ce00b1275eb34c25 # v3.3.1
+    GIT_TAG 9190880c593dfb018ccf5cc9729ab87739709862 # v3.5.0 -- also fixes a build failure against
+                                                      # recent libc++ (sol::optional<T&> incompatibility)
+                                                      # that v3.3.1 hits on this toolchain
 )
 FetchContent_MakeAvailable(sol2)
 
@@ -111,7 +113,7 @@ message(STATUS "Downloading pugixml")
 FetchContent_Declare(
     pugixml
     GIT_REPOSITORY https://github.com/zeux/pugixml.git
-    GIT_TAG db78afc2b7d8f043b4bc6b185635d949ea2ed2a8 # v1.14
+    GIT_TAG c8033ce9d039e7f9d134877c363397b3cfe20816 # v1.16
 )
 FetchContent_MakeAvailable(pugixml)
 
@@ -119,7 +121,7 @@ message(STATUS "Downloading tinyxml2")
 FetchContent_Declare(
     tinyxml2
     GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
-    GIT_TAG 321ea883b7190d4e85cae5512a12e5eaa8f8731f # v10.0.0
+    GIT_TAG 9148bdf719e997d1f474be6bcc7943881046dba1 # v11.0.0
 )
 FetchContent_MakeAvailable(tinyxml2)
 
