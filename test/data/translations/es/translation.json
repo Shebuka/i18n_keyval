@@ -1,9 +1,10 @@
 {
   "moon": "Luna",
-  "moon_plural": "Lunas",
+  "moon_one": "Luna",
+  "moon_other": "Lunas",
   "sun": "Sol",
-  "eating_orange": "Comiendo {count} naranja",
-  "eating_orange_plural": "Comiendo {count} naranjas",
+  "eating_orange_one": "Comiendo {{count}} naranja",
+  "eating_orange_other": "Comiendo {{count}} naranjas",
 
   "colors": {
     "black": "Negro",

@@ -1,9 +1,10 @@
 {
   "moon": "Moon",
-  "moon_plural": "Moons",
+  "moon_one": "Moon",
+  "moon_other": "Moons",
   "sun": "Sun",
-  "eating_orange": "Eating {count} orange",
-  "eating_orange_plural": "Eating {count} oranges",
+  "eating_orange_one": "Eating {{count}} orange",
+  "eating_orange_other": "Eating {{count}} oranges",
 
   "colors": {
     "black": "Black",

@@ -44,18 +44,18 @@ TEST_CASE("translator::basic (plurals)", "[translators]")
   const i18n::translations translations{
       {"en",
        {
-           {"moon", "Moon"},
-           {"moon_plural", "Moons"},
-           {"eating_orange", "Eating {count} orange"},
-           {"eating_orange_plural", "Eating {count} oranges"},
+           {"moon_one", "Moon"},
+           {"moon_other", "Moons"},
+           {"eating_orange_one", "Eating {{count}} orange"},
+           {"eating_orange_other", "Eating {{count}} oranges"},
        }},
       {"es",
        {
-           {"moon", "Luna"},
-           {"moon_plural", "Lunas"},
+           {"moon_one", "Luna"},
+           {"moon_other", "Lunas"},
            {"sun", "Sol"},
-           {"eating_orange", "Comiendo {count} naranja"},
-           {"eating_orange_plural", "Comiendo {count} naranjas"},
+           {"eating_orange_one", "Comiendo {{count}} naranja"},
+           {"eating_orange_other", "Comiendo {{count}} naranjas"},
        }},
   };
 

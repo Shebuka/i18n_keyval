@@ -93,6 +93,44 @@ Luna
 Gato
 ```
 
+## Pluralization & interpolation
+
+`i18n::t(key, count)` picks a translation key based on `count`'s CLDR plural
+category (i18next-style), and `{{placeholder}}` occurrences in the result are
+substituted from a parameter list. Named and positional parameters are the
+same mechanism -- a positional parameter is just a name that happens to be a
+stringified index (`"0"`, `"1"`, ...) -- so both can appear in the same call
+and the same translation string.
+
+Every plural-aware key requires an explicit category suffix -- there is no
+bare-key fallback. Full CLDR cardinal-plural rules are implemented for `ar`,
+`en`, `es`, `fr`, and `it` (matched by language subtag, e.g. `"en-US"` uses
+`en`'s rule); `ar` is the only one of these five with more than a `_one`/
+`_other` split. Every other locale falls back to that same `_one`/`_other`
+split.
+
+**Example:**
+```cpp
+i18n::translations translations{
+  {"en", {
+    {"unread_one", "{{name}} has {{count}} unread message"},
+    {"unread_other", "{{name}} has {{count}} unread messages"},
+  }},
+};
+
+i18n::initialize_translator(translations);
+i18n::set_locale("en");
+
+std::cout << i18n::t("unread", 1, {{"name", "Alice"}}) << '\n';
+std::cout << i18n::t("unread", 5, {{"name", "Alice"}}) << '\n';
+```
+
+**Output**:
+```
+Alice has 1 unread message
+Alice has 5 unread messages
+```
+
 ## Custom translator
 To use a custom translator, you have to provide any class that implements a `set_locale` and `translate` methods. This allows you to retrieve strings with other methods such as xml, lua, other json library or a custom container.
 
@@ -147,8 +185,8 @@ Luna
 - String literal usage
 - Free function usage
 - Nested json
-- Plurals
-- Plural interpolation
+- i18next-style pluralization (full CLDR for `ar`/`en`/`es`/`fr`/`it`, `_one`/`_other` fallback for other locales)
+- `{{placeholder}}` interpolation, named and positional
 
 # Translators
 - Default (using `unordered_map`)

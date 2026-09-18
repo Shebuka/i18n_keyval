@@ -1,8 +1,9 @@
 <moon>Luna</moon>
-<moon_plural>Lunas</moon_plural>
+<moon_one>Luna</moon_one>
+<moon_other>Lunas</moon_other>
 <sun>Sol</sun>
-<eating_orange>Comiendo {count} naranja</eating_orange>
-<eating_orange_plural>Comiendo {count} naranjas</eating_orange_plural>
+<eating_orange_one>Comiendo {{count}} naranja</eating_orange_one>
+<eating_orange_other>Comiendo {{count}} naranjas</eating_orange_other>
 
 <colors>
   <black>Negro</black>

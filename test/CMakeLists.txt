@@ -135,6 +135,8 @@ SET(
     I18N_KEYVAL_TEST_SOURCES
     core/api.cpp
     core/common.cpp
+    core/interpolate.cpp
+    core/plural.cpp
     core/registry.cpp
     util/split.cpp
     util/file.cpp

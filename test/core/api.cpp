@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <i18n_keyval/core/api.hpp>
+#include <i18n_keyval/translators/basic.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -53,4 +54,76 @@ TEST_CASE("custom translator", "[core]")
 
   i18n::set_locale("es");
   REQUIRE("moon"_t == "Luna");
+}
+
+TEST_CASE("t(key, params): named and positional interpolation, no pluralization", "[core]")
+{
+  const i18n::translations translations{
+      {"en", {{"greeting", "Hello {{name}}, item {{0}} of {{1}}"}}},
+  };
+
+  i18n::set_locale("en");
+  i18n::initialize_translator(translations);
+
+  REQUIRE(i18n::t("greeting", {{"name", "Alice"}, {"0", "3"}, {"1", "10"}}) == "Hello Alice, item 3 of 10");
+}
+
+TEST_CASE("t(key, count, params): pluralization combined with interpolation", "[core]")
+{
+  const i18n::translations translations{
+      {"en",
+       {
+           {"unread_one", "{{name}} has {{count}} unread message"},
+           {"unread_other", "{{name}} has {{count}} unread messages"},
+       }},
+  };
+
+  i18n::set_locale("en");
+  i18n::initialize_translator(translations);
+
+  REQUIRE(i18n::t("unread", 1, {{"name", "Alice"}}) == "Alice has 1 unread message");
+  REQUIRE(i18n::t("unread", 5, {{"name", "Alice"}}) == "Alice has 5 unread messages");
+}
+
+TEST_CASE("t(key, count): the full ar category set is reachable through the public API, not just select_plural_category", "[core]")
+{
+  const i18n::translations translations{
+      {"ar",
+       {
+           {"dogs_zero", "zero"},
+           {"dogs_one", "one"},
+           {"dogs_two", "two"},
+           {"dogs_few", "few"},
+           {"dogs_many", "many"},
+           {"dogs_other", "other"},
+       }},
+  };
+
+  i18n::set_locale("ar");
+  i18n::initialize_translator(translations);
+
+  REQUIRE(i18n::t("dogs", 0) == "zero");
+  REQUIRE(i18n::t("dogs", 1) == "one");
+  REQUIRE(i18n::t("dogs", 2) == "two");
+  REQUIRE(i18n::t("dogs", 5) == "few");
+  REQUIRE(i18n::t("dogs", 15) == "many");
+  REQUIRE(i18n::t("dogs", 100) == "other");
+}
+
+TEST_CASE("t(key, count): a locale outside the five with full CLDR rules falls back to one/other", "[core]")
+{
+  const i18n::translations translations{
+      {"de",
+       {
+           {"dogs_one", "one dog"},
+           {"dogs_other", "many dogs"},
+       }},
+  };
+
+  i18n::set_locale("de");
+  i18n::initialize_translator(translations);
+
+  REQUIRE(i18n::t("dogs", 1) == "one dog");
+  REQUIRE(i18n::t("dogs", 0) == "many dogs");
+  REQUIRE(i18n::t("dogs", 5) == "many dogs");
 }

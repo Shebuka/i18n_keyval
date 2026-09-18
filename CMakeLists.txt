@@ -8,6 +8,8 @@ option(I18N_KEYVAL_EXCEPTIONS "If off, compile with -fno-exceptions and print i1
 SET(
     I18N_KEYVAL_SOURCES
     src/i18n_keyval/core/api.cpp
+    src/i18n_keyval/core/interpolate.cpp
+    src/i18n_keyval/core/plural.cpp
     src/i18n_keyval/core/registry.cpp
     src/i18n_keyval/core/common.cpp
     src/i18n_keyval/util/file.cpp

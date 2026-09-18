@@ -1,8 +1,10 @@
 #pragma once
 
 #include <filesystem>
+#include <initializer_list>
 #include <string>
 
+#include "i18n_keyval/core/interpolate.hpp"
 #include "i18n_keyval/core/registry.hpp"
 #include "i18n_keyval/translators/basic.hpp"
 
@@ -14,7 +16,22 @@ const std::string default_file_name = "translation";
 
 [[nodiscard]] std::string t(std::string_view key_) noexcept;
 
+// count-based pluralization: resolves to key_<category> (e.g. "_one",
+// "_other", or one of ar's fuller set -- see core/plural.hpp) and
+// auto-injects {{count}} as an interpolation parameter.
 [[nodiscard]] std::string t(std::string_view key_, std::size_t count_) noexcept;
+
+// Named and/or positional interpolation, no pluralization. A parameter's
+// name can be anything a translation string references as {{name}},
+// including a stringified index ("0", "1", ...) for positional-style
+// use -- both are looked up the same way.
+[[nodiscard]] std::string t(std::string_view key_, std::initializer_list<interpolation_param> params_) noexcept;
+
+// Pluralization combined with interpolation. {{count}} is auto-injected
+// same as the count-only overload above; `params_` is applied on top of
+// it.
+[[nodiscard]] std::string t(std::string_view key_, std::size_t count_,
+                            std::initializer_list<interpolation_param> params_) noexcept;
 
 template <typename T = translators::basic, typename... Args>
 void initialize_translator(Args&&... args_)
